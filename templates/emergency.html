@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}PetAI 응급 서비스{% endblock %}
+
+{% block content %}
+<div class="emergency-hero">
+    <h1>반려동물 응급 상황 가이드</h1>
+    <p>긴급 상황 발생 시 신속한 대처방법을 안내해드립니다</p>
+</div>
+
+<div class="emergency-container">
+    <div class="emergency-categories">
+        <div class="emergency-card critical">
+            <h3>위급 상황 (즉시 병원 방문 필요)</h3>
+            <ul>
+                <li>심한 출혈이 있는 경우</li>
+                <li>호흡 곤란</li>
+                <li>의식 불명</li>
+                <li>심한 구토/설사</li>
+                <li>경련/발작</li>
+            </ul>
+            <div class="action-guide">
+                <strong>조치 방법:</strong>
+                <p>가까운 24시 동물병원으로 즉시 이동하세요. 이동 중 동물의 상태를 안정적으로 유지하는 것이 중요합니다.</p>
+            </div>
+        </div>
+
+        <div class="emergency-card first-aid">
+            <h3>응급 처치 가이드</h3>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <button class="accordion-btn">출혈 시 응급처치</button>
+                    <div class="accordion-content">
+                        <p>1. 깨끗한 천이나 거즈로 출혈 부위를 압박합니다.</p>
+                        <p>2. 5-10분간 지속적으로 압박을 유지합니다.</p>
+                        <p>3. 출혈이 심각한 경우 즉시 병원으로 이동합니다.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-btn">열사병 응급처치</button>
+                    <div class="accordion-content">
+                        <p>1. 시원한 장소로 이동시킵니다.</p>
+                        <p>2. 미지근한 물로 몸을 적셔줍니다.</p>
+                        <p>3. 물을 조금씩 마시게 합니다.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <button class="accordion-btn">이물질 섭취 시</button>
+                    <div class="accordion-content">
+                        <p>1. 섭취한 물질을 확인합니다.</p>
+                        <p>2. 구토를 유도하지 마세요.</p>
+                        <p>3. 즉시 수의사와 상담하세요.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="emergency-card prevention">
+            <h3>예방 체크리스트</h3>
+            <div class="checklist">
+                <label class="checkbox-item">
+                    <input type="checkbox"> 반려동물 응급키트 구비
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox"> 가까운 24시 동물병원 위치 파악
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox"> 수의사 연락처 저장
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox"> 반려동물 의료보험 가입
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 아코디언 기능
+document.querySelectorAll('.accordion-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        const content = button.nextElementSibling;
+        button.classList.toggle('active');
+        
+        if (button.classList.contains('active')) {
+            content.style.maxHeight = content.scrollHeight + 'px';
+        } else {
+            content.style.maxHeight = 0;
+        }
+    });
+});
+
+// 체크리스트 관리
+const checklistItems = document.querySelectorAll('.checkbox-item input');
+const CHECKLIST_KEY = 'emergency_checklist';
+
+// 저장된 체크리스트 상태 불러오기
+function loadChecklistState() {
+    const savedState = localStorage.getItem(CHECKLIST_KEY);
+    if (savedState) {
+        const state = JSON.parse(savedState);
+        checklistItems.forEach((checkbox, index) => {
+            checkbox.checked = state[index];
+            updateCheckboxLabel(checkbox);
+        });
+    }
+}
+
+// 체크리스트 상태 저장하기
+function saveChecklistState() {
+    const state = Array.from(checklistItems).map(checkbox => checkbox.checked);
+    localStorage.setItem(CHECKLIST_KEY, JSON.stringify(state));
+}
+
+// 체크박스 라벨 스타일 업데이트
+function updateCheckboxLabel(checkbox) {
+    const label = checkbox.closest('.checkbox-item');
+    if (checkbox.checked) {
+        label.classList.add('checked');
+    } else {
+        label.classList.remove('checked');
+    }
+}
+
+// 체크박스 이벤트 리스너
+checklistItems.forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+        updateCheckboxLabel(checkbox);
+        saveChecklistState();
+        
+        // 체크 시 알림 메시지 표시
+        const message = checkbox.checked ? '완료!' : '체크 해제됨';
+        showNotification(message, checkbox.checked);
+    });
+});
+
+// 알림 메시지 표시
+function showNotification(message, isSuccess) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${isSuccess ? 'success' : 'warning'}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // 애니메이션 효과
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    // 3초 후 제거
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+// 페이지 로드 시 저장된 상태 불러오기
+loadChecklistState();
+</script>
+{% endblock %} 

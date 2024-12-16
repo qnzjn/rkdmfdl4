@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}PetAI 건강상담{% endblock %}
+
+{% block content %}
+<div class="health-hero">
+    <h1>AI 반려동물 건강상담</h1>
+    <p>24시간 언제나 가능한 스마트 건강 상담 서비스</p>
+</div>
+
+<div class="health-container">
+    <div class="category-selector">
+        <button class="category-btn active" data-pet="dog">강아지</button>
+        <button class="category-btn" data-pet="cat">고양이</button>
+    </div>
+
+    <div class="subcategory-selector">
+        <button class="subcategory-btn active" data-category="general">일반증상</button>
+        <button class="subcategory-btn" data-category="emergency">응급상황</button>
+        <button class="subcategory-btn" data-category="prevention">예방관리</button>
+        <button class="subcategory-btn" data-category="nutrition">영양관리</button>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                반려동물의 건강에 대해 무엇이든 물어보세요. 
+                증상, 예방, 영양 관리 등 전문적인 조언을 제공해드립니다.
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="증상이나 궁금한 점을 입력하세요...">
+            <button onclick="sendMessage()">전송</button>
+        </div>
+    </div>
+
+    <div class="quick-tips">
+        <h3>자주 묻는 질문</h3>
+        <div class="tips-grid">
+            <button onclick="setQuestion('구토와 설사가 있어요')">구토와 설사 증상</button>
+            <button onclick="setQuestion('식욕이 없어요')">식욕 부진</button>
+            <button onclick="setQuestion('예방접종 시기가 궁금해요')">예방접종 시기</button>
+            <button onclick="setQuestion('피부가 가려워해요')">피부 가려움</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPet = 'dog';
+let currentCategory = 'general';
+
+document.querySelectorAll('.category-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentPet = this.dataset.pet;
+        updateContext();
+    });
+});
+
+document.querySelectorAll('.subcategory-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentCategory = this.dataset.category;
+        updateContext();
+    });
+});
+
+function updateContext() {
+    const contextMessage = `선택된 카테고리: ${currentPet === 'dog' ? '강아지' : '고양이'} - ${getCategoryName(currentCategory)}`;
+    addMessage('bot', contextMessage);
+}
+
+function getCategoryName(category) {
+    const categories = {
+        'general': '일반증상',
+        'emergency': '응급상황',
+        'prevention': '예방관리',
+        'nutrition': '영양관리'
+    };
+    return categories[category];
+}
+
+function sendMessage() {
+    const input = document.getElementById('userInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage('user', message);
+    input.value = '';
+
+    // API 요청 데이터에 현재 선택된 카테고리 정보 포함
+    fetch('/chat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            message: message,
+            pet_type: currentPet,
+            category: currentCategory
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            addMessage('bot', data.response);
+        } else {
+            addMessage('bot', '죄송합니다. 오류가 발생했습니다.');
+        }
+    })
+    .catch(error => {
+        addMessage('bot', '죄송합니다. 오류가 발생했습니다.');
+        console.error('Error:', error);
+    });
+}
+
+function addMessage(type, text) {
+    const messages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}-message`;
+    messageDiv.textContent = text;
+    messages.appendChild(messageDiv);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function setQuestion(question) {
+    document.getElementById('userInput').value = question;
+}
+
+// Enter 키로 메시지 전송
+document.getElementById('userInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+</script>
+{% endblock %} 

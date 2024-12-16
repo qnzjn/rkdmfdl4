@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}PetAI 자유게시판{% endblock %}
+
+{% block content %}
+<div class="board-hero">
+    <h1>반려동물 자유게시판</h1>
+    <p>반려동물과 함께하는 일상을 공유해주세요</p>
+</div>
+
+<div class="board-container">
+    <div class="board-header">
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="검색어를 입력하세요">
+            <button onclick="searchPosts()" class="search-btn">검색</button>
+        </div>
+        <button onclick="location.href='{{ url_for('write_post') }}'" class="write-btn">글쓰기</button>
+    </div>
+
+    <div class="board-categories">
+        <button class="category-btn active" data-category="all">전체</button>
+        <button class="category-btn" data-category="daily">일상</button>
+        <button class="category-btn" data-category="question">질문</button>
+        <button class="category-btn" data-category="info">정보공유</button>
+    </div>
+
+    <div class="post-list">
+        {% for post in posts %}
+        <div class="post-item" onclick="location.href='{{ url_for('view_post', post_id=post.id) }}'">
+            <div class="post-info">
+                <span class="category-tag {{ post.category }}">{{ post.category }}</span>
+                <h3 class="post-title">{{ post.title }}</h3>
+                <div class="post-meta">
+                    <span class="author">{{ post.author }}</span>
+                    <span class="date">{{ post.date }}</span>
+                    <span class="comments">댓글 {{ post.comments|length }}</span>
+                </div>
+            </div>
+            <div class="post-preview">{{ post.content[:100] }}...</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="pagination">
+        {% if total_pages > 1 %}
+            {% if current_page > 1 %}
+                <a href="{{ url_for('board', page=current_page-1) }}" class="page-btn prev">이전</a>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+                <a href="{{ url_for('board', page=p) }}" 
+                   class="page-btn {% if p == current_page %}active{% endif %}">
+                    {{ p }}
+                </a>
+            {% endfor %}
+            
+            {% if current_page < total_pages %}
+                <a href="{{ url_for('board', page=current_page+1) }}" class="page-btn next">다음</a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.category-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        button.classList.add('active');
+        filterPosts(button.dataset.category);
+    });
+});
+
+// 검색어 입력 시 실시간 검색
+document.getElementById('searchInput').addEventListener('input', searchPosts);
+
+// Enter 키 입력 시 검색 실행
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchPosts();
+    }
+});
+
+function filterPosts(category) {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const posts = document.querySelectorAll('.post-item');
+    
+    posts.forEach(post => {
+        const postCategory = post.querySelector('.category-tag').classList[1];
+        const matchesCategory = category === 'all' || category === postCategory;
+        const matchesSearch = searchTerm === '' || matchesSearchTerm(post, searchTerm);
+        
+        post.style.display = (matchesCategory && matchesSearch) ? 'block' : 'none';
+    });
+}
+
+function searchPosts() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const currentCategory = document.querySelector('.category-btn.active').dataset.category;
+    const posts = document.querySelectorAll('.post-item');
+    
+    posts.forEach(post => {
+        const postCategory = post.querySelector('.category-tag').classList[1];
+        const matchesCategory = currentCategory === 'all' || currentCategory === postCategory;
+        const matchesSearch = matchesSearchTerm(post, searchTerm);
+        
+        post.style.display = (matchesCategory && matchesSearch) ? 'block' : 'none';
+    });
+
+    // 검색 결과가 없을 경우 메시지 표시
+    const visiblePosts = document.querySelectorAll('.post-item[style="display: block"]');
+    const noResultsMsg = document.getElementById('noResultsMessage');
+    
+    if (visiblePosts.length === 0) {
+        if (!noResultsMsg) {
+            const message = document.createElement('div');
+            message.id = 'noResultsMessage';
+            message.className = 'no-results';
+            message.textContent = '검색 결과가 없습니다.';
+            document.querySelector('.post-list').appendChild(message);
+        }
+    } else if (noResultsMsg) {
+        noResultsMsg.remove();
+    }
+}
+
+function matchesSearchTerm(post, searchTerm) {
+    const title = post.querySelector('.post-title').textContent.toLowerCase();
+    const content = post.querySelector('.post-preview').textContent.toLowerCase();
+    const category = post.querySelector('.category-tag').textContent.toLowerCase();
+    const author = post.querySelector('.author').textContent.toLowerCase();
+    
+    return title.includes(searchTerm) || 
+           content.includes(searchTerm) || 
+           category.includes(searchTerm) || 
+           author.includes(searchTerm);
+}
+
+function changePage(delta) {
+    const currentPage = document.querySelector('.current-page');
+    const newPage = parseInt(currentPage.textContent) + delta;
+    if (newPage > 0) {
+        currentPage.textContent = newPage;
+        // 페이지 변경 로직
+        console.log('Changed to page:', newPage);
+    }
+}
+
+// 페이지 로드 시 URL의 카테고리 파라미터 확인
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get('category') || 'all';
+    
+    // 해당 카테고리 버튼 활성화
+    const categoryBtn = document.querySelector(`[data-category="${category}"]`);
+    if (categoryBtn) {
+        categoryBtn.click();
+    }
+});
+</script>
+{% endblock %} 

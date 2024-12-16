@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}PetAI 영양 관리{% endblock %}
+
+{% block content %}
+<div class="nutrition-hero">
+    <h1>반려동물 맞춤 영양 관리</h1>
+    <p>과학적인 데이터를 기반으로 한 최적의 영양 솔루션</p>
+</div>
+
+<div class="nutrition-container">
+    <div class="pet-selector">
+        <button class="pet-btn active" data-pet="dog">강아지</button>
+        <button class="pet-btn" data-pet="cat">고양이</button>
+    </div>
+
+    <div class="nutrition-grid">
+        <!-- 맞춤형 식단 추천 섹션 -->
+        <div class="nutrition-card diet">
+            <div class="card-header">
+                <h3>맞춤형 식단 추천</h3>
+                <p>반려동물의 특성에 맞는 최적의 식단을 제안합니다</p>
+            </div>
+            <div class="diet-calculator">
+                <div class="input-group">
+                    <label>나이 (개월)</label>
+                    <input type="number" id="age" min="1" placeholder="예: 24">
+                </div>
+                <div class="input-group">
+                    <label>체중 (kg)</label>
+                    <input type="number" id="weight" step="0.1" placeholder="예: 5.5">
+                </div>
+                <div class="input-group">
+                    <label>활동량</label>
+                    <select id="activity">
+                        <option value="low">낮음 (실내 생활)</option>
+                        <option value="medium">보통 (일일 1시간 산책)</option>
+                        <option value="high">높음 (활동적)</option>
+                    </select>
+                </div>
+                <button onclick="calculateDiet()" class="calculate-btn">식단 계산하기</button>
+            </div>
+            <div id="dietResult" class="diet-result"></div>
+        </div>
+
+        <!-- 알레르기 식품 관리 섹션 -->
+        <div class="nutrition-card allergy">
+            <div class="card-header">
+                <h3>알레르기 식품 관리</h3>
+                <p>알레르기 반응을 일으킬 수 있는 식품을 관리하세요</p>
+            </div>
+            <div class="allergy-manager">
+                <div class="input-group">
+                    <input type="text" id="allergyInput" placeholder="알레르기 식품 입력">
+                    <button onclick="addAllergy()" class="add-btn">추가</button>
+                </div>
+                <div id="allergyList" class="allergy-list">
+                    <!-- 알레르기 항목들이 여기에 추가됩니다 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 연령별 영양 가이드 섹션 -->
+        <div class="nutrition-card age-guide">
+            <div class="card-header">
+                <h3>연령별 영양 가이드</h3>
+                <p>성장 단계별 최적의 영양 관리 방법을 확인하세요</p>
+            </div>
+            <div class="age-tabs">
+                <button class="age-tab active" data-age="puppy">퍼피</button>
+                <button class="age-tab" data-age="adult">성견</button>
+                <button class="age-tab" data-age="senior">시니어</button>
+            </div>
+            <div class="age-content">
+                <div id="puppyGuide" class="guide-content active">
+                    <h4>퍼피 (0-12개월)</h4>
+                    <ul>
+                        <li>단백질: 고품질 단백질 위주의 식단</li>
+                        <li>지방: DHA가 풍부한 오메가-3 지방산</li>
+                        <li>칼슘: 뼈와 치아 발달을 위한 적정량</li>
+                        <li>식사 횟수: 하루 3-4회 분할 급여</li>
+                    </ul>
+                </div>
+                <div id="adultGuide" class="guide-content">
+                    <h4>성견 (1-7년)</h4>
+                    <ul>
+                        <li>균형잡힌 단백질과 지방 섭취</li>
+                        <li>적절한 식이섬유 섭취</li>
+                        <li>체중 관리를 위한 칼로리 조절</li>
+                        <li>식사 횟수: 하루 2회 분할 급여</li>
+                    </ul>
+                </div>
+                <div id="seniorGuide" class="guide-content">
+                    <h4>시니어 (7년 이상)</h4>
+                    <ul>
+                        <li>소화가 쉬운 단백질 위주</li>
+                        <li>관절 건강을 위한 글루코사민</li>
+                        <li>면역력 강화를 위한 항산화제</li>
+                        <li>식사 횟수: 하루 2-3회 소량 분할 급여</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 반려동물 선택 기능
+document.querySelectorAll('.pet-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        document.querySelectorAll('.pet-btn').forEach(b => b.classList.remove('active'));
+        button.classList.add('active');
+        updateNutritionInfo();
+    });
+});
+
+// 연령별 가이드 탭 기능
+document.querySelectorAll('.age-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.age-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        document.querySelectorAll('.guide-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        const age = tab.dataset.age;
+        document.getElementById(`${age}Guide`).classList.add('active');
+    });
+});
+
+// 맞춤형 식단 계산
+function calculateDiet() {
+    const age = document.getElementById('age').value;
+    const weight = document.getElementById('weight').value;
+    const activity = document.getElementById('activity').value;
+    const petType = document.querySelector('.pet-btn.active').dataset.pet;
+    
+    if (!age || !weight) {
+        alert('나이와 체중을 입력해주세요.');
+        return;
+    }
+
+    const result = document.getElementById('dietResult');
+    result.innerHTML = `
+        <h4>일일 권장 식단</h4>
+        <div class="diet-details">
+            <p>필요 칼로리: ${calculateCalories(weight, activity, age)} kcal</p>
+            <p>단백질: ${calculateProtein(weight, age)}g</p>
+            <p>수분 섭취량: ${calculateWater(weight)}ml</p>
+        </div>
+        <div class="feeding-guide">
+            <h5>급여 가이드</h5>
+            <p>${generateFeedingGuide(age, activity)}</p>
+        </div>
+    `;
+}
+
+// 알레르기 식품 관리
+function addAllergy() {
+    const input = document.getElementById('allergyInput');
+    const allergyList = document.getElementById('allergyList');
+    
+    if (!input.value.trim()) return;
+    
+    const allergyItem = document.createElement('div');
+    allergyItem.className = 'allergy-item';
+    allergyItem.innerHTML = `
+        <span>${input.value}</span>
+        <button onclick="this.parentElement.remove()" class="remove-btn">×</button>
+    `;
+    
+    allergyList.appendChild(allergyItem);
+    input.value = '';
+    
+    saveAllergies();
+}
+
+// 알레르기 목록 저장
+function saveAllergies() {
+    const allergies = Array.from(document.querySelectorAll('.allergy-item span'))
+        .map(span => span.textContent);
+    localStorage.setItem('petAllergies', JSON.stringify(allergies));
+}
+
+// 저장된 알레르기 목록 불러오기
+function loadAllergies() {
+    const savedAllergies = localStorage.getItem('petAllergies');
+    if (savedAllergies) {
+        JSON.parse(savedAllergies).forEach(allergy => {
+            const input = document.getElementById('allergyInput');
+            input.value = allergy;
+            addAllergy();
+        });
+    }
+}
+
+// 칼로리 계산 함수
+function calculateCalories(weight, activity, age) {
+    let RER = 70 * Math.pow(weight, 0.75);
+    let multiplier = 1;
+    
+    switch(activity) {
+        case 'low': multiplier = 1.2; break;
+        case 'medium': multiplier = 1.4; break;
+        case 'high': multiplier = 1.6; break;
+    }
+    
+    if (age < 12) multiplier *= 1.2;
+    if (age > 84) multiplier *= 0.8;
+    
+    return Math.round(RER * multiplier);
+}
+
+// 단백질 계산 함수
+function calculateProtein(weight, age) {
+    let protein = weight * 2;
+    if (age < 12) protein *= 1.2;
+    if (age > 84) protein *= 0.8;
+    return Math.round(protein);
+}
+
+// 수분 섭취량 계산 함수
+function calculateWater(weight) {
+    return Math.round(weight * 50);
+}
+
+// 급여 가이드 생성 함수
+function generateFeedingGuide(age, activity) {
+    if (age < 12) {
+        return "하루 3-4회 분할 급여를 추천합니다. 성장기에는 규칙적인 식사가 중요합니다.";
+    } else if (age > 84) {
+        return "하루 2-3회 소량으로 나누어 급여하세요. 소화가 쉬운 식사를 제공하는 것이 좋습니다.";
+    } else {
+        return "하루 2회 규칙적인 시간에 급여하세요. 활동량에 따라 양을 조절하��� 것이 좋습니다.";
+    }
+}
+
+// 페이지 로드 시 알레르기 목록 불러오기
+document.addEventListener('DOMContentLoaded', loadAllergies);
+</script>
+{% endblock %} 

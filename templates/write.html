@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}글쓰기 - PetAI 자유게시판{% endblock %}
+
+{% block content %}
+<div class="write-container">
+    <h1>게시글 작성</h1>
+    
+    <form method="POST" action="{{ url_for('write_post') }}" class="write-form">
+        <div class="form-group">
+            <label for="title">제목</label>
+            <input type="text" id="title" name="title" required placeholder="제목을 입력하세요">
+        </div>
+        
+        <div class="form-group">
+            <label for="category">카테고리</label>
+            <select id="category" name="category" required>
+                <option value="daily">일상</option>
+                <option value="question">질문</option>
+                <option value="info">정보공유</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="content">내용</label>
+            <textarea id="content" name="content" required placeholder="내용을 입력하세요"></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button type="submit" class="submit-btn">작성완료</button>
+            <button type="button" onclick="history.back()" class="cancel-btn">취소</button>
+        </div>
+    </form>
+</div>
+{% endblock %} 

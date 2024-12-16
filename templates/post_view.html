@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - PetAI 자유게시판{% endblock %}
+
+{% block content %}
+<div class="post-view-container">
+    <div class="post-header">
+        <span class="category-tag {{ post.category }}">{{ post.category }}</span>
+        <h1>{{ post.title }}</h1>
+        <div class="post-meta">
+            <span class="author">작성자: {{ post.author }}</span>
+            <span class="date">작성일: {{ post.date }}</span>
+        </div>
+    </div>
+
+    <div class="post-content">
+        {{ post.content.replace('\n', '<br>')|safe }}
+    </div>
+
+    <div class="post-actions">
+        <button onclick="history.back()" class="back-btn">목록으로</button>
+        <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" class="delete-form" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+            <button type="submit" class="delete-btn">삭제</button>
+        </form>
+    </div>
+
+    <div class="comments-section">
+        <h3>댓글 {{ post.comments|length }}개</h3>
+        
+        <form class="comment-form" action="{{ url_for('add_comment', post_id=post.id) }}" method="POST">
+            <textarea name="comment" placeholder="댓글을 입력하세요" required></textarea>
+            <button type="submit">댓글 작성</button>
+        </form>
+
+        <div class="comments-list">
+            {% for comment in post.comments %}
+            <div class="comment-item">
+                <div class="comment-meta">
+                    <span class="comment-author">{{ comment.author }}</span>
+                    <span class="comment-date">{{ comment.date }}</span>
+                    <form action="{{ url_for('delete_comment', post_id=post.id, comment_id=comment.id) }}" method="POST" class="delete-form" onsubmit="return confirm('댓글을 삭제하시겠습니까?');">
+                        <button type="submit" class="comment-delete-btn">삭제</button>
+                    </form>
+                </div>
+                <div class="comment-content">
+                    {{ comment.content }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

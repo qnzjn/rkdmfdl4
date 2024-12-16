@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}프로필 - PetAI{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-image-wrapper">
+            <img src="{{ url_for('static', filename='uploads/' + user.profile.profile_image) }}" alt="프로필 이미지" class="profile-image">
+            {% if user.nickname == '관리자' %}
+                <span class="admin-badge">관리자</span>
+            {% endif %}
+        </div>
+        <div class="profile-info">
+            <div class="profile-title">
+                <h1>{{ user.nickname }}님의 프로필</h1>
+                <a href="{{ url_for('edit_profile') }}" class="edit-profile-btn">
+                    <i class="fas fa-edit"></i> 프로필 수정
+                </a>
+            </div>
+            {% if user.profile.bio %}
+                <p class="bio">{{ user.profile.bio }}</p>
+            {% else %}
+                <p class="bio empty">자기소개를 작성해주세요.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="profile-content">
+        <div class="pet-info-section">
+            <h2>반려동물 정보</h2>
+            {% if user.profile.pet_name %}
+                <div class="pet-card">
+                    <div class="pet-header">
+                        <span class="pet-type-badge {% if user.profile.pet_type == '강아지' %}dog{% else %}cat{% endif %}">
+                            {{ user.profile.pet_type }}
+                        </span>
+                    </div>
+                    <div class="pet-details">
+                        <div class="pet-name">
+                            <span class="label">이름</span>
+                            <span class="value">{{ user.profile.pet_name }}</span>
+                        </div>
+                        <div class="pet-age">
+                            <span class="label">나이</span>
+                            <span class="value">{{ user.profile.pet_age }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-pet-info">
+                    <p>아직 반려동물 정보가 없습니다.</p>
+                    <a href="{{ url_for('edit_profile') }}" class="add-pet-btn">반려동물 정보 추가하기</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="activity-section">
+            <h2>활동 내역</h2>
+            <div class="activity-grid">
+                <div class="activity-card">
+                    <div class="activity-icon posts">
+                        <i class="fas fa-pencil-alt"></i>
+                    </div>
+                    <div class="activity-details">
+                        <span class="activity-count">{{ post_count }}</span>
+                        <span class="activity-label">작성한 게시글</span>
+                    </div>
+                </div>
+                <div class="activity-card">
+                    <div class="activity-icon comments">
+                        <i class="fas fa-comment"></i>
+                    </div>
+                    <div class="activity-details">
+                        <span class="activity-count">{{ comment_count }}</span>
+                        <span class="activity-label">작성한 댓글</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

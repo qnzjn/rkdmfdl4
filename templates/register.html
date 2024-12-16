@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}회원가입 - PetAI{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>회원가입</h1>
+    <form method="POST" action="{{ url_for('register') }}" class="auth-form" id="registerForm">
+        <div class="form-group">
+            <label for="user_id">아이디</label>
+            <input type="text" id="user_id" name="user_id" required>
+            <span class="validation-message" id="user_id_message"></span>
+        </div>
+        <div class="form-group">
+            <label for="nickname">닉네임</label>
+            <input type="text" id="nickname" name="nickname" required>
+            <span class="validation-message" id="nickname_message"></span>
+        </div>
+        <div class="form-group">
+            <label for="password">비밀번호</label>
+            <input type="password" id="password" name="password" required minlength="8">
+            <span class="validation-message" id="password_message"></span>
+        </div>
+        <div class="form-group">
+            <label for="password_confirm">비밀번호 확인</label>
+            <input type="password" id="password_confirm" name="password_confirm" required minlength="8">
+            <span class="validation-message" id="password_confirm_message"></span>
+        </div>
+        <button type="submit" class="submit-btn" disabled>회원가입</button>
+    </form>
+    <div class="auth-links">
+        <p>이미 계정이 있으신가요? <a href="{{ url_for('login') }}">로그인</a></p>
+    </div>
+</div>
+
+<script>
+let isIdValid = false;
+let isNicknameValid = false;
+let isPasswordValid = false;
+let isPasswordConfirmValid = false;
+
+function updateSubmitButton() {
+    const submitBtn = document.querySelector('.submit-btn');
+    submitBtn.disabled = !(isIdValid && isNicknameValid && isPasswordValid && isPasswordConfirmValid);
+}
+
+function checkDuplicate(field, value) {
+    const formData = new FormData();
+    formData.append(field, value);
+    
+    fetch('/check_duplicate', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const messageElement = document.getElementById(`${field}_message`);
+        if (data.exists) {
+            messageElement.textContent = data.message;
+            messageElement.className = 'validation-message error';
+            if (field === 'user_id') isIdValid = false;
+            if (field === 'nickname') isNicknameValid = false;
+        } else {
+            messageElement.textContent = '사용 가능합니다.';
+            messageElement.className = 'validation-message success';
+            if (field === 'user_id') isIdValid = true;
+            if (field === 'nickname') isNicknameValid = true;
+        }
+        updateSubmitButton();
+    });
+}
+
+// 아이디 중복 검사
+document.getElementById('user_id').addEventListener('input', function(e) {
+    const value = e.target.value.trim();
+    if (value.length >= 4) {
+        checkDuplicate('user_id', value);
+    } else {
+        document.getElementById('user_id_message').textContent = '아이디는 4자 이상이어야 합니다.';
+        document.getElementById('user_id_message').className = 'validation-message error';
+        isIdValid = false;
+        updateSubmitButton();
+    }
+});
+
+// 닉네임 중복 검사
+document.getElementById('nickname').addEventListener('input', function(e) {
+    const value = e.target.value.trim();
+    if (value.length >= 2) {
+        checkDuplicate('nickname', value);
+    } else {
+        document.getElementById('nickname_message').textContent = '닉네임은 2자 이상이어야 합니다.';
+        document.getElementById('nickname_message').className = 'validation-message error';
+        isNicknameValid = false;
+        updateSubmitButton();
+    }
+});
+
+// 비밀번호 유효성 검사
+document.getElementById('password').addEventListener('input', function(e) {
+    const value = e.target.value;
+    const messageElement = document.getElementById('password_message');
+    
+    if (value.length < 8) {
+        messageElement.textContent = '비밀번호는 8자 이상이어야 합니다.';
+        messageElement.className = 'validation-message error';
+        isPasswordValid = false;
+    } else {
+        messageElement.textContent = '사용 가능한 비밀번호입니다.';
+        messageElement.className = 'validation-message success';
+        isPasswordValid = true;
+    }
+    updateSubmitButton();
+});
+
+// 비밀번호 확인 검사
+document.getElementById('password_confirm').addEventListener('input', function(e) {
+    const password = document.getElementById('password').value;
+    const confirmValue = e.target.value;
+    const messageElement = document.getElementById('password_confirm_message');
+    
+    if (password === confirmValue) {
+        messageElement.textContent = '비밀번호가 일치합니다.';
+        messageElement.className = 'validation-message success';
+        isPasswordConfirmValid = true;
+    } else {
+        messageElement.textContent = '비밀번호가 일치하지 않습니다.';
+        messageElement.className = 'validation-message error';
+        isPasswordConfirmValid = false;
+    }
+    updateSubmitButton();
+});
+</script>
+{% endblock %} 
